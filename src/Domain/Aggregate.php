@@ -4,33 +4,16 @@ use C4tech\RayEmitter\Contracts\Domain\Aggregate as AggregateInterface;
 use C4tech\RayEmitter\Contracts\Domain\Command as CommandInterface;
 use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 use C4tech\RayEmitter\Contracts\Event\Collection as EventCollectionInterface;
-use C4tech\RayEmitter\Event\Collection as EventCollection;
+use C4tech\RayEmitter\Event\Store as EventStore;
+use C4tech\RayEmitter\Exceptions\CommandHandlerMissing;
+use C4tech\RayEmitter\Exceptions\EventHandlerMissing;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Event as EventBus;
 
 abstract class Aggregate implements AggregateInterface
 {
     /**
-     * Aggregate data
-     * @var array
-     */
-    protected $data = [];
-
-    /**
-     * Queue of uncommitted Events.
-     * @var EventCollection
-     */
-    private $event_queue;
-
-    /**
-     * Aggregate root entity identifier.
-     * @var ValueObjectInterface
-     */
-    private $identifier;
-
-    /**
      * Aggregate root entity.
-     * @var EntityInterface
+     * @var AggregateRootInterface
      */
     protected $root;
 
@@ -39,14 +22,6 @@ abstract class Aggregate implements AggregateInterface
      * @var integer
      */
     private $sequence = 0;
-
-    /**
-     * Constructor
-     */
-    public function __construct()
-    {
-        $this->event_queue = new EventCollection;
-    }
 
     /**
      * Apply
@@ -60,10 +35,16 @@ abstract class Aggregate implements AggregateInterface
         $method = $this->createMethodName('apply', $event);
 
         if (!method_exists($this, $method)) {
-            throw new MethodMissingException();
+            throw new EventHandlerMissing(
+                sprintf(
+                    'Command %s does not have a handler for its expected aggregate %s',
+                    get_class($event),
+                    get_class($this)
+                ),
+                501
+            );
         }
 
-        $event->checkSequence($this->sequence++);
         $this->$method($event);
     }
 
@@ -80,9 +61,10 @@ abstract class Aggregate implements AggregateInterface
     {
         if (!$prefix_default) {
             $prefix_default = $prefix_key;
+            $prefix_key .= '_prefix';
         }
 
-        $prefix = Config::get('ray_emitter.' . $prefix_key . '_prefix', $prefix_default);
+        $prefix = Config::get('ray_emitter.' . $prefix_key, $prefix_default);
         $base = basename(get_class($object));
 
         return $prefix . $base;
@@ -91,9 +73,9 @@ abstract class Aggregate implements AggregateInterface
     /**
      * @inheritDoc
      */
-    public function flush()
+    public function getEntity()
     {
-        return $this->event_queue->flush();
+        return $this->root->makeEntity();
     }
 
     /**
@@ -101,7 +83,15 @@ abstract class Aggregate implements AggregateInterface
      */
     public function getId()
     {
-        return $this->identifier;
+        return $this->root->getId();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getSequence()
+    {
+        return $this->sequence;
     }
 
     /**
@@ -112,7 +102,14 @@ abstract class Aggregate implements AggregateInterface
         $method = $this->createMethodName('handle', $command);
 
         if (!method_exists($this, $method)) {
-            throw new CommandHandlerMissingException();
+            throw new CommandHandlerMissing(
+                sprintf(
+                    'Command %s does not have a handler for its expected aggregate %s',
+                    get_class($command),
+                    get_class($this)
+                ),
+                501
+            );
         }
 
         $event = $this->$method($command);
@@ -124,8 +121,9 @@ abstract class Aggregate implements AggregateInterface
      */
     public function hydrate(EventCollectionInterface $events)
     {
-        $events->each(function ($event) {
+        $events->each(function (EventInterface $event) {
             $this->apply($event);
+            $this->sequence++;
         });
     }
 
@@ -139,9 +137,27 @@ abstract class Aggregate implements AggregateInterface
      */
     private function publish(EventInterface $event)
     {
-        $this->event_queue->append($event);
         $this->apply($event);
+        EventStore::enqueue($event);
+    }
 
-        EventBus::fire($event);
+    /**
+     * Magic Getter
+     *
+     * Expose getter methods on the Aggregate and Aggregate Root as properties.
+     * @param  string $property Requested "property"
+     * @return mixed
+     */
+    public function __get($property)
+    {
+        $method = 'get' . studly_case($property);
+
+        if (method_exists($this, $method)) {
+            return $this->$method();
+        } elseif ($property !== 'root' && isset($this->$property)) {
+            return $this->$property;
+        }
+
+        return $this->root->$property;
     }
 }

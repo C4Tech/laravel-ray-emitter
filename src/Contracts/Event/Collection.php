@@ -19,12 +19,4 @@ interface Collection
      * @return void
      */
     public function each(callable $callback);
-
-    /**
-     * Flush
-     *
-     * Remove all events from the collection and return them as a new collection.
-     * @return static
-     */
-    public function flush();
 }

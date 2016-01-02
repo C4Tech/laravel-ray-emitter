@@ -5,12 +5,12 @@ use C4tech\RayEmitter\Contracts\Event\Collection as EventCollection;
 interface Aggregate
 {
     /**
-     * Flush
+     * Get Entity
      *
-     * Clear the queue of unsaved events.
-     * @return EventCollection
+     * Return the read-only root Entity of the Aggregate.
+     * @return Entity
      */
-    public function flush();
+    public function getEntity();
 
     /**
      * Get Id
@@ -19,6 +19,14 @@ interface Aggregate
      * @return ValueObjectInterface
      */
     public function getId();
+
+    /**
+     * Get Sequence
+     *
+     * Return the current version sequence number.
+     * @return int Current version sequence.
+     */
+    public function getSequence();
 
     /**
      * Handle

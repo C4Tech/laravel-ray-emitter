@@ -3,6 +3,9 @@
 use C4tech\RayEmitter\Contracts\Domain\Aggregate as AggregateInterface;
 use C4tech\RayEmitter\Contracts\Domain\Command as CommandInterface;
 use C4tech\RayEmitter\Contracts\Domain\Repository as RepositoryInterface;
+use C4tech\RayEmitter\Event\Store as EventStore;
+use C4tech\RayEmitter\Exceptions\OutdatedSequence;
+use C4tech\RayEmitter\Exceptions\SequenceMismatch;
 
 class Repository implements RepositoryInterface
 {
@@ -12,8 +15,19 @@ class Repository implements RepositoryInterface
     public static function find($identifier)
     {
         $aggregate = static::create();
-        $events = EventLog::getFor($identifier);
-        $aggregate->hydrate($events);
+        static::restore($identifier, $aggregate);
+
+        return $aggregate;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function getEntity($identifier)
+    {
+        $aggregate = static::find($identifier);
+
+        return $aggregate->getEntity();
     }
 
     /**
@@ -21,21 +35,47 @@ class Repository implements RepositoryInterface
      */
     public static function handle(CommandInterface $command)
     {
+        $aggregate = static::create();
         if ($aggregate_id = $command->getAggregateId()) {
-            $instance = static::restore($aggregate_id);
-        } else {
-            $instance = static::create();
+            static::restore($aggregate_id, $aggregate);
         }
 
-        $expected_sequence = $command->getExpectedSequence();
-        $current_sequence = $instance->getSequence();
-        if ($expected_sequence < $current_sequence) {
-            throw new OutdatedSequenceException();
-        } elseif ($expected_sequence > $current_sequence) {
-            throw new SequenceMismatchException();
+        // Optimistic concurrency handling
+        $expected = $command->getExpectedSequence();
+        $current = $aggregate->getSequence();
+        if ($expected < $current) {
+            throw new OutdatedSequence(
+                sprintf(
+                    'The Aggregate %s has newer data than expected.',
+                    get_class($aggregate)
+                ),
+                409
+            );
+        } elseif ($expected > $current) {
+            throw new SequenceMismatch(
+                sprintf(
+                    'The Aggregate %s is expected to have more data than it does',
+                    get_class($aggregate)
+                ),
+                422
+            );
         }
 
-        $instance->handle($command);
+        $aggregate->handle($command);
+    }
+
+    /**
+     * Restore
+     *
+     * Hydrate an aggregate with its recorded events.
+     * @param  string             $identifier Aggregate root entity identifier.
+     * @param  AggregateInterface &$aggregate (Fresh) Aggregate to hydrate.
+     * @return void
+     */
+    protected static function restore($identifier, &$aggregate)
+    {
+        $events = EventStore::getFor($identifier);
+        $aggregate->hydrate($events);
     }
 
     /**

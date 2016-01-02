@@ -20,6 +20,15 @@ interface Repository
     public static function find($identifier);
 
     /**
+     * Get Entity
+     *
+     * Return the Aggregate Root as a read-only Entity.
+     * @param  string $identifier Aggregate root entity identifier.
+     * @return Entity
+     */
+    public static function getEntity($identifier);
+
+    /**
      * Handle
      *
      * Point of entry for Commands to allow fetching of Aggregate state.

@@ -4,10 +4,22 @@ use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 
 abstract class Event implements EventInterface
 {
+    /**
+     * Global identifier for the entity related to this event.
+     * @var string
+     */
     protected $identifier;
 
+    /**
+     * Payload of event alterations.
+     * @var object
+     */
     protected $payload;
 
+    /**
+     * Version sequence number.
+     * @var integer
+     */
     protected $sequence = 0;
 
     public function __construct($identifier, array $payload)
