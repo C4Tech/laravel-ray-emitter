@@ -4,9 +4,9 @@ use C4tech\RayEmitter\Contracts\Domain\Aggregate as AggregateInterface;
 use C4tech\RayEmitter\Contracts\Domain\Command as CommandInterface;
 use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 use C4tech\RayEmitter\Contracts\Event\Collection as EventCollectionInterface;
-use C4tech\RayEmitter\Event\Store as EventStore;
 use C4tech\RayEmitter\Exceptions\CommandHandlerMissing;
 use C4tech\RayEmitter\Exceptions\EventHandlerMissing;
+use C4tech\RayEmitter\Facades\EventStore;
 use Illuminate\Support\Facades\Config;
 
 abstract class Aggregate implements AggregateInterface
@@ -21,7 +21,7 @@ abstract class Aggregate implements AggregateInterface
      * Event sequence counter.
      * @var integer
      */
-    private $sequence = 0;
+    protected $sequence = 0;
 
     /**
      * Apply
@@ -30,7 +30,7 @@ abstract class Aggregate implements AggregateInterface
      * @param  EventInterface $event An event that has occurred.
      * @return void
      */
-    private function apply(EventInterface $event)
+    protected function apply(EventInterface $event)
     {
         $method = $this->createMethodName('apply', $event);
 
@@ -57,7 +57,7 @@ abstract class Aggregate implements AggregateInterface
      * @param  string $prefix_default The default prefix.
      * @return string                 The method name to use.
      */
-    private function createMethodName($prefix_key, $object, $prefix_default = null)
+    protected function createMethodName($prefix_key, $object, $prefix_default = null)
     {
         if (!$prefix_default) {
             $prefix_default = $prefix_key;
@@ -65,7 +65,7 @@ abstract class Aggregate implements AggregateInterface
         }
 
         $prefix = Config::get('ray_emitter.' . $prefix_key, $prefix_default);
-        $base = basename(get_class($object));
+        $base = class_basename($object);
 
         return $prefix . $base;
     }
@@ -135,7 +135,7 @@ abstract class Aggregate implements AggregateInterface
      * @param  EventInterface $event An Event created by a Command handler.
      * @return void
      */
-    private function publish(EventInterface $event)
+    protected function publish(EventInterface $event)
     {
         $this->apply($event);
         EventStore::enqueue($event);
@@ -154,8 +154,6 @@ abstract class Aggregate implements AggregateInterface
 
         if (method_exists($this, $method)) {
             return $this->$method();
-        } elseif ($property !== 'root' && isset($this->$property)) {
-            return $this->$property;
         }
 
         return $this->root->$property;

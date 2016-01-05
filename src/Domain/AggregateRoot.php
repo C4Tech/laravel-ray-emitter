@@ -11,7 +11,7 @@ trait AggregateRoot // extends AggregateRootInterface
     public function makeEntity()
     {
         $class = get_parent_class($this);
-        $entity = new $class($this->identity);
+        $entity = new $class($this->getId());
 
         $properties = get_object_vars($this);
         foreach ($properties as $key => $value) {

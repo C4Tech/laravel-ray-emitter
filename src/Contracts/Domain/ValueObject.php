@@ -1,5 +1,7 @@
 <?php namespace C4tech\RayEmitter\Contracts\Domain;
 
+use JsonSerializable;
+
 interface ValueObject extends JsonSerializable
 {
     /**
