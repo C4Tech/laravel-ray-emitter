@@ -3,7 +3,7 @@
 use C4tech\RayEmitter\Contracts\Domain\Aggregate as AggregateInterface;
 use C4tech\RayEmitter\Contracts\Domain\Command as CommandInterface;
 use C4tech\RayEmitter\Contracts\Domain\Repository as RepositoryInterface;
-use C4tech\RayEmitter\Event\Store as EventStore;
+use C4tech\RayEmitter\Facades\EventStore;
 use C4tech\RayEmitter\Exceptions\OutdatedSequence;
 use C4tech\RayEmitter\Exceptions\SequenceMismatch;
 
@@ -72,17 +72,9 @@ abstract class Repository implements RepositoryInterface
      * @param  AggregateInterface &$aggregate (Fresh) Aggregate to hydrate.
      * @return void
      */
-    protected static function restore($identifier, &$aggregate)
+    protected static function restore($identifier, AggregateInterface &$aggregate)
     {
         $events = EventStore::getFor($identifier);
         $aggregate->hydrate($events);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function save(AggregateInterface $aggregate)
-    {
-        EventStore::append($aggregate->flush());
     }
 }

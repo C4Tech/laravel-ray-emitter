@@ -2,7 +2,7 @@
 
 use Exception;
 
-class OutdatedSeqeunce extends Exception
+class OutdatedSequence extends Exception
 {
     // Nothing else
 }

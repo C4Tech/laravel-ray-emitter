@@ -36,13 +36,4 @@ interface Repository
      * @return void
      */
     public static function handle(Command $command);
-
-    /**
-     * Save
-     *
-     * Push new events into the Event Store.
-     * @param  Aggregate $aggregate Aggregate to save.
-     * @return void
-     */
-    public static function save(Aggregate $aggregate);
 }

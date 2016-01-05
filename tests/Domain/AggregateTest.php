@@ -8,6 +8,12 @@ use Mockery;
 
 class AggregateTest extends Base
 {
+    public function tearDown()
+    {
+        parent::tearDown();
+        EventStore::clearResolvedInstances();
+    }
+
     /**
      * @expectedException C4tech\RayEmitter\Exceptions\EventHandlerMissing
      */
