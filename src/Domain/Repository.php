@@ -7,7 +7,7 @@ use C4tech\RayEmitter\Event\Store as EventStore;
 use C4tech\RayEmitter\Exceptions\OutdatedSequence;
 use C4tech\RayEmitter\Exceptions\SequenceMismatch;
 
-class Repository implements RepositoryInterface
+abstract class Repository implements RepositoryInterface
 {
     /**
      * @inheritDoc

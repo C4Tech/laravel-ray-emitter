@@ -1,5 +1,7 @@
 <?php namespace C4tech\RayEmitter\Contracts\Domain;
 
+use stdClass;
+
 interface Event
 {
     /**
@@ -30,8 +32,8 @@ interface Event
      * Unserialize
      *
      * Restore payload data from a stored JSON string.
-     * @param string $json JSON-encoded data
-     * @return void
+     * @param  stdClass $record Stored Event record
+     * @return static
      */
-    public static function unserialize($json);
+    public static function unserialize(stdClass $record);
 }

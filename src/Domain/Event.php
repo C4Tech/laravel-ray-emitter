@@ -1,5 +1,6 @@
 <?php namespace C4tech\RayEmitter\Domain;
 
+use stdClass;
 use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 
 abstract class Event implements EventInterface
@@ -11,16 +12,22 @@ abstract class Event implements EventInterface
     protected $identifier;
 
     /**
-     * Payload of event alterations.
-     * @var object
-     */
-    protected $payload;
-
-    /**
      * Version sequence number.
      * @var integer
      */
     protected $sequence = 0;
+
+    /**
+     * Date object of when the event occurred.
+     * @var DateTime
+     */
+    protected $timestamp;
+
+    /**
+     * Payload of event alterations.
+     * @var object
+     */
+    protected $payload;
 
     public function __construct($identifier, array $payload)
     {
@@ -56,13 +63,12 @@ abstract class Event implements EventInterface
         return $this->sequence;
     }
 
-    public static function restore($data)
+    /**
+     * @inheritDoc
+     */
+    public function getTimestamp()
     {
-        $event = static::unserialize($data->id, $data->payload);
-        $event->setSequence($data->sequence);
-        $event->setTimestamp($data->recorded_on);
-
-        return $event;
+        return $this->timestamp;
     }
 
     /**
@@ -84,9 +90,9 @@ abstract class Event implements EventInterface
     /**
      * @inheritDoc
      */
-    public static function unserialize($identifier, $json)
+    public static function unserialize(stdClass $record)
     {
-        $payload = json_decode($json);
+        $payload = json_decode($record->payload, true);
         $data = [];
 
         foreach ($payload as $key => $config) {
@@ -94,6 +100,9 @@ abstract class Event implements EventInterface
             $data[$key] = $class::jsonUnserialize($config['value']);
         }
 
-        return new static($identifier, $data);
+        $event = new static($record->eventable_id, $data);
+        $event->sequence = $record->sequence;
+
+        return $event;
     }
 }

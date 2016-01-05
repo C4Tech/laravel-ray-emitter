@@ -9,7 +9,7 @@ abstract class ValueObject implements ValueObjectInterface
      */
     public function equals(ValueObjectInterface $other)
     {
-        if (get_clas($other) === get_class($this)) {
+        if (get_class($other) !== get_class($this)) {
             return false;
         }
 

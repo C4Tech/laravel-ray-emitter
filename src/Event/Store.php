@@ -31,8 +31,8 @@ class Store
 
     private static function restoreEvent($record)
     {
-        $class = $record->type;
+        $class = $record->eventable_type;
 
-        return $class::restore($record);
+        return $class::unserialize($record);
     }
 }
