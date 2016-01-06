@@ -46,10 +46,12 @@ abstract class Entity implements EntityInterface
 
         if ($property !== 'id' && method_exists($this, $method)) {
             $this->$method($value);
-            return;
+        } elseif ($property !== 'identity' && property_exists($this, $property)) {
+            $this->$property = $value;
+        } else {
+            throw new UnknownProperty('There is no way to set ' . $property, 504);
         }
 
-        throw new UnknownProperty('There is no way to set ' . $property);
     }
 
     /**
@@ -69,6 +71,6 @@ abstract class Entity implements EntityInterface
             return $this->$property;
         }
 
-        throw new UnknownProperty('Cannot find the property ' . $property . ' on ' . get_class($this));
+        throw new UnknownProperty('Cannot find the property ' . $property . ' on ' . get_class($this), 504);
     }
 }

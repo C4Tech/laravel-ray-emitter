@@ -1,6 +1,7 @@
 {
     "name": "c4tech/ray-emitter",
     "description": "Dive into Domain Driven Design using Event Sourcing and CQRS within your Laravel application.",
+    "keywords": ["laravel", "domain", "event", " sourcing", "cqrs"],
     "authors": [
         {
             "name": "Marcus Amargi",
@@ -25,7 +26,7 @@
         "illuminate/support": "^5.0.0"
     },
     "suggest": {
-        "ramsey/uuid": "Provide UUID identifiers for entities"
+        "ramsey/uuid": "Simple UUID generator for entity identifiers"
     },
     "autoload": {
         "psr-4": {

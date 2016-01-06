@@ -46,13 +46,21 @@ class EntityTest extends Base
         expect($this->subject->getMagicField())->equals($value);
     }
 
+    public function testSetAccessesProperty()
+    {
+        $set = $this->getMethod($this->subject, 'set');
+        expect_not($set->invoke($this->subject, 'test_field', false));
+        $value = $this->getPropertyValue($this->subject, 'test_field');
+        expect($value)->equals(false);
+    }
+
     /**
      * @expectedException C4tech\RayEmitter\Exceptions\UnknownProperty
      */
     public function testSetThrowsError()
     {
         $set = $this->getMethod($this->subject, 'set');
-        expect_not($set->invoke($this->subject, 'test_field', false));
+        expect_not($set->invoke($this->subject, 'other_field', false));
     }
 
     public function testGetterCallsMethod()
@@ -73,4 +81,3 @@ class EntityTest extends Base
         expect_not($this->subject->other_field);
     }
 }
-
