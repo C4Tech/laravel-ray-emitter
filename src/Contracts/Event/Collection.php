@@ -1,5 +1,7 @@
 <?php namespace C4tech\RayEmitter\Contracts\Event;
 
+use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
+
 interface Collection
 {
     /**

@@ -21,7 +21,11 @@
     "require": {
         "php": ">=5.5.9",
         "c4tech/support": "^3.0.0",
+        "illuminate/database": "^5.0.0",
         "illuminate/support": "^5.0.0"
+    },
+    "suggest": {
+        "ramsey/uuid": "Provide UUID identifiers for entities"
     },
     "autoload": {
         "psr-4": {

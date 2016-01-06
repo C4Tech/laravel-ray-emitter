@@ -84,12 +84,14 @@ class EventTest extends Base
         $value->value = json_encode($payload->settings);
 
         $record = new stdClass;
-        $record->eventable_id = $this->identifier;
+        $record->identifier = $this->identifier;
         $record->sequence = $sequence;
         $record->payload = json_encode(['settings' => $value]);
+        $record->created_at = new DateTime;
 
         $event = EventStub::unserialize($record);
         expect($event->getSequence())->equals($sequence);
         expect($event->getPayload())->equals($payload);
+        expect($event->getTimestamp())->equals($record->created_at);
     }
 }

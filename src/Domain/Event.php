@@ -100,8 +100,9 @@ abstract class Event implements EventInterface
             $data[$key] = $class::jsonUnserialize($config['value']);
         }
 
-        $event = new static($record->eventable_id, $data);
+        $event = new static($record->identifier, $data);
         $event->sequence = $record->sequence;
+        $event->timestamp = $record->created_at;
 
         return $event;
     }

@@ -1,37 +1,40 @@
 <?php namespace C4tech\RayEmitter\Event;
 
+use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
+use C4tech\RayEmitter\Contracts\Event\Store as StoreInterface;
 use Illuminate\Support\Facades\Event as EventBus;
+use Illuminate\Database\Eloquent\Model;
 
-class Store
+class Store extends Model implements StoreInterface
 {
-    private $queue = [];
+    protected static $queue = [];
 
-    public static function enqueue(EventInterface $event)
+    public function enqueue(EventInterface $event)
     {
-        self::$queue[] = [
-            'eventable_type' => get_class($event),
-            'eventable_id'   => $event->getId(),
-            'payload'        => $event->serialize()
+        static::$queue[] = [
+            'event'      => get_class($event),
+            'identifier' => $event->getId(),
+            'payload'    => $event->serialize()
         ];
 
         EventBus::fire($event);
     }
 
-    public static function getFor($identifier)
+    public function getFor($identifier)
     {
         $events = new Collection;
 
-        $recorded_events = self::where('eventable_id', '=', $identifier)->get();
+        $recorded_events = $this->newQuery()->where('identifier', '=', $identifier)->get();
         foreach ($recorded_events as $record) {
-            $events->append(self::restoreEvent($record));
+            $events->append($this->restoreEvent($record));
         }
 
         return $events;
     }
 
-    private static function restoreEvent($record)
+    protected function restoreEvent($record)
     {
-        $class = $record->eventable_type;
+        $class = $record->event;
 
         return $class::unserialize($record);
     }
