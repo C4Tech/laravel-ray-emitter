@@ -1,6 +1,7 @@
 {
     "name": "c4tech/ray-emitter",
     "description": "Dive into Domain Driven Design using Event Sourcing and CQRS within your Laravel application.",
+    "license": "MIT",
     "keywords": ["laravel", "domain", "event", " sourcing", "cqrs"],
     "authors": [
         {
