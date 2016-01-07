@@ -12,16 +12,18 @@ class CreateEventStore extends Migration
      */
     public function up()
     {
-        Schema::create('event_store', function (Blueprint $table) {
-            $table->string('identifier', 40);
-            $table->unsignedInteger('sequence');
-            $table->string('event', 100);
-            $table->json('payload');
-            $table->timestamps();
+        if (!Schema::hasTable('event_store')) {
+            Schema::create('event_store', function (Blueprint $table) {
+                $table->string('identifier', 40);
+                $table->unsignedInteger('sequence');
+                $table->string('event', 100);
+                $table->text('payload');
+                $table->timestamps();
 
-            $table->primary(['identifier', 'sequence'], 'entity_version');
-            $table->index('identifier');
-        });
+                $table->primary(['identifier', 'sequence'], 'entity_version');
+                $table->index('identifier');
+            });
+        }
     }
 
     /**
