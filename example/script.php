@@ -1,6 +1,9 @@
 <?php
 
-use C4tech\RayEmitter\Example\BankAccount\CreateAccount;
+use RayEmitter\Example\BankAccount\CreateAccount;
+use RayEmitter\Example\BankAccount\DepositMoney;
+use RayEmitter\Example\BankAccount\GetAccountBalance;
+use RayEmitter\Example\BankAccount\WithdrawMoney;
 
 $data = [
     'owner' => 'Owner Name',
@@ -19,4 +22,4 @@ $command = new DepositMoney($account, $data, 1);
 $command->setExpectedSequence(1)->run();
 
 $query = new GetAccountBalance($account);
-$query->run(); // As of sequence 1, return value should be 360.
+echo $query->run(); // As of sequence 1, return value should be 360.

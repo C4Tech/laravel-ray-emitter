@@ -1,4 +1,4 @@
-<?php namespace C4tech\RayEmitter\Example\BankAccount;
+<?php namespace RayEmitter\Example\BankAccount;
 
 use C4tech\RayEmitter\Domain\Command;
 

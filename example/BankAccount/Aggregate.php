@@ -1,6 +1,7 @@
-<?php namespace C4tech\RayEmitter\Example\BankAccount;
+<?php namespace RayEmitter\Example\BankAccount;
 
 use C4tech\RayEmitter\Domain\Aggregate as AbstractAggregate;
+use Ramsey\Uuid\Uuid;
 
 final class Aggregate extends AbstractAggregate
 {
@@ -64,7 +65,7 @@ final class Aggregate extends AbstractAggregate
     {
         $data = $command->getPayload();
 
-        $account_id = new AccountId(generateUuid());
+        $account_id = new AccountId(Uuid::uuid4()->toString());
         $owner = new OwnerName($data->owner);
         $initial_deposit = new UsDollar($data->deposit);
 
