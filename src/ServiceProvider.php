@@ -8,12 +8,16 @@ class ServiceProvider extends BaseServiceProvider
 {
     protected $configPath = '';
 
+    protected $migrationPath = '';
+
     /**
      * @inheritDoc
      */
     public function __construct($app)
     {
         $this->configPath = __DIR__ . '/../resources/config.php';
+        $this->migrationPath = __DIR__ . '/../resources/migrations';
+
         parent::__construct($app);
     }
 
@@ -24,7 +28,11 @@ class ServiceProvider extends BaseServiceProvider
     {
         $configs = [];
         $configs[$this->configPath] = config_path('ray_emitter.php');
-        $this->publishes($configs);
+        $this->publishes($configs, 'config');
+
+        $migrations = [];
+        $migrations[$this->migrationPath] = database_path('migrations');
+        $this->publishes($migrations, 'migrations');
     }
 
     /**

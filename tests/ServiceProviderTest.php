@@ -33,17 +33,44 @@ class ServiceProviderTest extends TestCase
     {
         include_once('helpers.php');
         $this->provider->shouldReceive('publishes')
-            ->with(Mockery::on(function ($configMapping) {
-                $keys = array_keys($configMapping);
+            ->with(
+                Mockery::on(function ($configMapping) {
+                    $keys = array_keys($configMapping);
+                    $key = array_pop($keys);
 
-                $key = array_pop($keys);
-                expect($key)->contains('/resources/config.php');
+                    if (substr($key, -10) !== 'config.php') {
+                        return false;
+                    }
 
-                $value = array_pop($configMapping);
-                expect($value)->equals('test/ray_emitter.php');
+                    expect($key)->contains('/resources/config.php');
 
-                return true;
-            }))->once();
+                    $value = array_pop($configMapping);
+                    expect($value)->equals('test/ray_emitter.php');
+
+                    return true;
+                }),
+                'config'
+            )->once();
+
+        $this->provider->shouldReceive('publishes')
+            ->with(
+                Mockery::on(function ($migrationMapping) {
+                    $keys = array_keys($migrationMapping);
+                    $key = array_pop($keys);
+
+                    if (substr($key, -10) !== 'migrations') {
+                        return false;
+                    }
+
+                    expect($key)->contains('/resources/migrations');
+
+                    $value = array_pop($migrationMapping);
+                    expect($value)->equals('testdb/migrations');
+
+                    return true;
+                }),
+                'migrations'
+            )->once();
 
         expect_not($this->provider->boot());
     }
