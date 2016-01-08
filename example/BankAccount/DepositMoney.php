@@ -27,6 +27,6 @@ final class DepositMoney extends Command
      */
     public function run()
     {
-        Aggregate::handle($this);
+        Repository::handle($this);
     }
 }

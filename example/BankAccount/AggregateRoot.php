@@ -7,11 +7,6 @@ final class AggregateRoot extends Entity implements AggregateRootInterface
 {
     use RootTrait;
 
-    protected function setBalance(UsDollar $value)
-    {
-        $this->balance = $value;
-    }
-
     protected function setOwner(OwnerName $value)
     {
         $this->owner = $value;

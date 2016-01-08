@@ -27,6 +27,6 @@ final class WithdrawMoney extends Command
      */
     public function run()
     {
-        Aggregate::handle($this);
+        Repository::handle($this);
     }
 }

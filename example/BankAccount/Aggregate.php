@@ -67,13 +67,17 @@ final class Aggregate extends AbstractAggregate
 
         $account_id = new AccountId(Uuid::uuid4()->toString());
         $owner = new OwnerName($data->owner);
-        $initial_deposit = new UsDollar($data->deposit);
+        $deposit = new UsDollar($data->deposit);
 
-        if ($initial_deposit->getValue() < self::MINIMUM_TO_OPEN) {
-            throw new MinimumDepositException($initial_deposit->getValue(), self::MINIMUM_TO_OPEN);
+        if ($deposit->getValue() < self::MINIMUM_TO_OPEN) {
+            throw new MinimumDepositException(sprintf(
+                'The deposit of $%s is under the required minimum of $%s',
+                $deposit->getValue(),
+                self::MINIMUM_TO_OPEN
+            ));
         }
 
-        return new AccountWasCreated($account_id, compact('owner', 'initial_deposit'));
+        return new AccountWasCreated($account_id->getValue(), compact('owner', 'deposit'));
     }
 
     /**
@@ -86,15 +90,13 @@ final class Aggregate extends AbstractAggregate
     protected function handleDepositMoney(DepositMoney $command)
     {
         $data = $command->getPayload();
-
-        $account_id = new AccountId($data->account_id);
         $deposit = new UsDollar($data->deposit);
 
         if ($deposit->getValue() < 0) {
-            throw new MinimumDepositException($deposit->getValue());
+            throw new MinimumDepositException('You cannot deposit a negative amount.');
         }
 
-        return new MoneyDeposited($account_id, compact('deposit'));
+        return new MoneyDeposited($command->getId(), compact('deposit'));
     }
 
     /**
@@ -107,18 +109,20 @@ final class Aggregate extends AbstractAggregate
     protected function handleWithdrawMoney(WithdrawMoney $command)
     {
         $data = $command->getPayload();
-
-        $account_id = new AccountId($data->account_id);
         $withdrawal = new UsDollar($data->withdrawal);
 
         if ($withdrawal->getValue() < 0) {
-            throw new MinimumWithdrawalException($withdrawal->getValue());
+            throw new MinimumWithdrawalException('You cannot withdraw a negative amount.');
         }
 
         if ($withdrawal->getValue() > $this->root->balance->getValue()) {
-            throw new InsufficientFundsException($withdrawal->getValue(), $this->balance->getValue());
+            throw new InsufficientFundsException(sprintf(
+                'Insufficient funds. You tried to withdraw $%s but only have $%s in your account.',
+                $withdrawal->getValue(),
+                $this->balance->getValue()
+            ));
         }
 
-        return new MoneyWithdrawn($account_id, compact('withdrawal'));
+        return new MoneyWithdrawn($command->getId(), compact('withdrawal'));
     }
 }
