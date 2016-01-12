@@ -21,7 +21,7 @@ abstract class Aggregate implements AggregateInterface
      * Event sequence counter.
      * @var integer
      */
-    protected $sequence = 0;
+    protected $sequence = -1;
 
     /**
      * Apply
