@@ -12,6 +12,11 @@ class Store extends Model implements StoreInterface
     /**
      * @inheritDoc
      */
+    protected $table = 'event_store';
+
+    /**
+     * @inheritDoc
+     */
     protected $fillable = [
         'identifier',
         'sequence',
