@@ -49,10 +49,10 @@ class Store extends Model implements StoreInterface
         return $class::unserialize($record);
     }
 
-    public static function saveQueue()
+    public function saveQueue()
     {
         foreach (static::$queue as $record) {
-            $record['sequence'] = static::forEntity($record['identifier'])
+            $record['sequence'] = $this->newQuery()->forEntity($record['identifier'])
                 ->count();
             static::create($record);
         }
