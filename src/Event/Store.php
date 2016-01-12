@@ -9,6 +9,16 @@ class Store extends Model implements StoreInterface
 {
     protected static $queue = [];
 
+    /**
+     * @inheritDoc
+     */
+    protected $fillable = [
+        'identifier',
+        'sequence',
+        'event',
+        'payload'
+    ];
+
     public function enqueue(EventInterface $event)
     {
         static::$queue[] = [
@@ -24,7 +34,7 @@ class Store extends Model implements StoreInterface
     {
         $events = new Collection;
 
-        $recorded_events = $this->newQuery()->where('identifier', '=', $identifier)->get();
+        $recorded_events = $this->newQuery()->forEntity($identifier)->get();
         foreach ($recorded_events as $record) {
             $events->append($this->restoreEvent($record));
         }
@@ -37,5 +47,21 @@ class Store extends Model implements StoreInterface
         $class = $record->event;
 
         return $class::unserialize($record);
+    }
+
+    public static function saveQueue()
+    {
+        foreach (static::$queue as $record) {
+            $record['sequence'] = static::forEntity($record['identifier'])
+                ->count();
+            static::create($record);
+        }
+
+        static::$queue = [];
+    }
+
+    public function scopeForEntity($query, $identifier)
+    {
+        return $query->where('identifier', '=', $identifier);
     }
 }

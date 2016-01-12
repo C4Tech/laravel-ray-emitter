@@ -14,13 +14,14 @@ class CreateEventStore extends Migration
     {
         if (!Schema::hasTable('event_store')) {
             Schema::create('event_store', function (Blueprint $table) {
+                $table->increments('id');
                 $table->string('identifier', 40);
                 $table->unsignedInteger('sequence');
                 $table->string('event', 100);
                 $table->text('payload');
                 $table->timestamps();
 
-                $table->primary(['identifier', 'sequence'], 'entity_version');
+                $table->unique(['identifier', 'sequence'], 'entity_version');
                 $table->index('identifier');
             });
         }
