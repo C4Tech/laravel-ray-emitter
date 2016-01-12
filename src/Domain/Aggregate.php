@@ -112,8 +112,9 @@ abstract class Aggregate implements AggregateInterface
             );
         }
 
-        $event = $this->$method($command);
-        $this->publish($event);
+        if ($event = $this->$method($command)) {
+            $this->publish($event);
+        }
     }
 
     /**
