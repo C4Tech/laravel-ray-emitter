@@ -1,6 +1,5 @@
 <?php namespace C4tech\RayEmitter\Domain;
 
-use C4tech\RayEmitter\Contracts\Domain\Aggregate as AggregateInterface;
 use C4tech\RayEmitter\Contracts\Domain\Command as CommandInterface;
 use C4tech\RayEmitter\Contracts\Domain\Repository as RepositoryInterface;
 use C4tech\RayEmitter\Facades\EventStore;
