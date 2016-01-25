@@ -12,18 +12,7 @@ abstract class Repository implements RepositoryInterface
     /**
      * @inheritDoc
      */
-    public static function find($identifier)
-    {
-        $aggregate = static::create();
-        static::restore($identifier, $aggregate);
-
-        return $aggregate;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function getEntity($identifier)
+    public static function get($identifier)
     {
         $aggregate = static::find($identifier);
 
@@ -35,10 +24,7 @@ abstract class Repository implements RepositoryInterface
      */
     public static function handle(CommandInterface $command)
     {
-        $aggregate = static::create();
-        if ($aggregate_id = $command->getAggregateId()) {
-            static::restore($aggregate_id, $aggregate);
-        }
+        $aggregate = static::find($command->getAggregateId());
 
         // Optimistic concurrency handling
         $expected = $command->getExpectedSequence();
@@ -61,20 +47,36 @@ abstract class Repository implements RepositoryInterface
             );
         }
 
-        $aggregate->handle($command);
+        if ($event = $aggregate->handle($command)) {
+            $aggregate->apply($event);
+            EventStore::enqueue($event);
+        }
     }
 
     /**
-     * Restore
+     * Create
      *
-     * Hydrate an aggregate with its recorded events.
-     * @param  string             $identifier Aggregate root entity identifier.
-     * @param  AggregateInterface &$aggregate (Fresh) Aggregate to hydrate.
-     * @return void
+     * Generate a new Aggregate with no history.
+     * @return Aggregate
      */
-    protected static function restore($identifier, AggregateInterface &$aggregate)
+    abstract protected static function create();
+
+    /**
+     * Find
+     *
+     * Restore an existing Aggregate from the recorded events related to it.
+     * @param  void|string $identifier Aggregate root entity identifier.
+     * @return Aggregate
+     */
+    protected static function find($identifier = null)
     {
-        $events = EventStore::getFor($identifier);
-        $aggregate->hydrate($events);
+        $aggregate = static::create();
+
+        if ($identifier) {
+            $events = EventStore::getFor($identifier);
+            $aggregate->hydrate($events);
+        }
+
+        return $aggregate;
     }
 }

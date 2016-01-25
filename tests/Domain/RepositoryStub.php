@@ -6,7 +6,7 @@ use Mockery;
 class RepositoryStub extends Repository
 {
     public static $mock;
-    public static function create()
+    protected static function create()
     {
         return static::$mock;
     }

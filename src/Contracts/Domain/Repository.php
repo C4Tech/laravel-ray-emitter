@@ -3,30 +3,13 @@
 interface Repository
 {
     /**
-     * Create
+     * Get
      *
-     * Generate a new Aggregate with no history.
-     * @return Aggregate
-     */
-    public static function create();
-
-    /**
-     * Find
-     *
-     * Restore an existing Aggregate from the recorded events related to it.
-     * @param  string $identifier Aggregate root entity identifier.
-     * @return Aggregate
-     */
-    public static function find($identifier);
-
-    /**
-     * Get Entity
-     *
-     * Return the Aggregate Root as a read-only Entity.
-     * @param  string $identifier Aggregate root entity identifier.
+     * Return a read-only Entity.
+     * @param  string $identifier Entity identifier.
      * @return Entity
      */
-    public static function getEntity($identifier);
+    public static function get($identifier);
 
     /**
      * Handle

@@ -2,12 +2,12 @@
 
 use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 use C4tech\RayEmitter\Event\Store as EventStore;
-use C4tech\Support\Test\Base;
+use C4tech\Support\Test\Model;
 use Codeception\Verify;
 use Illuminate\Support\Facades\Event as EventBus;
 use Mockery;
 
-class StoreTest extends Base
+class StoreTest extends Model
 {
     public function testEnqueue()
     {
@@ -53,9 +53,9 @@ class StoreTest extends Base
             ->once()
             ->andReturn($event);
 
-        $subject->shouldReceive('newQuery->where->get')
+        $subject->shouldReceive('newQuery->forEntity->get')
             ->withNoArgs()
-            ->with('identifier', '=', $identity)
+            ->with($identity)
             ->withNoArgs()
             ->once()
             ->andReturn([$record]);
@@ -77,5 +77,41 @@ class StoreTest extends Base
 
         $method = $this->getMethod($subject, 'restoreEvent');
         expect($method->invoke($subject, $record))->equals($record);
+    }
+
+    public function testSaveQueue()
+    {
+        $store = Mockery::mock(EventStore::class)
+            ->makePartial();
+        $event = [
+            'identifier' => 13
+        ];
+        $sequence = 3;
+        $this->setPropertyValue($store, 'queue', [$event]);
+        $store->shouldReceive('newQuery->forEntity->count')
+            ->withNoArgs()
+            ->with($event['identifier'])
+            ->withNoArgs()
+            ->once()
+            ->andReturn($sequence);
+
+        $expected = $event;
+        $expected['sequence'] = $sequence;
+
+        $store->shouldReceive('create')
+            ->with($expected)
+            ->once();
+
+        expect_not($store->saveQueue());
+
+        $queue = $this->getPropertyValue($store, 'queue');
+        expect($queue)->equals([]);
+    }
+
+    public function testScopeForEntity()
+    {
+        $identity = 12;
+        $this->setModel(EventStore::class);
+        $this->verifyScopeWhere('scopeForEntity', 'identifier', $identity);
     }
 }

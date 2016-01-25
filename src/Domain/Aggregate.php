@@ -6,7 +6,6 @@ use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 use C4tech\RayEmitter\Contracts\Event\Collection as EventCollectionInterface;
 use C4tech\RayEmitter\Exceptions\CommandHandlerMissing;
 use C4tech\RayEmitter\Exceptions\EventHandlerMissing;
-use C4tech\RayEmitter\Facades\EventStore;
 use Illuminate\Support\Facades\Config;
 
 abstract class Aggregate implements AggregateInterface
@@ -24,13 +23,9 @@ abstract class Aggregate implements AggregateInterface
     protected $sequence = -1;
 
     /**
-     * Apply
-     *
-     * Alter the Aggregate Root's state by adding a single event.
-     * @param  EventInterface $event An event that has occurred.
-     * @return void
+     * @inheritDoc
      */
-    protected function apply(EventInterface $event)
+    public function apply(EventInterface $event)
     {
         $method = $this->createMethodName('apply', $event);
 
@@ -112,9 +107,7 @@ abstract class Aggregate implements AggregateInterface
             );
         }
 
-        if ($event = $this->$method($command)) {
-            $this->publish($event);
-        }
+        return $this->$method($command);
     }
 
     /**
@@ -126,20 +119,6 @@ abstract class Aggregate implements AggregateInterface
             $this->apply($event);
             $this->sequence++;
         });
-    }
-
-    /**
-     * Publish
-     *
-     * Adds a new event to the event queue, applies it to to the Aggregate Root's
-     * state, and broadcasts the Event for listeners to handle.
-     * @param  EventInterface $event An Event created by a Command handler.
-     * @return void
-     */
-    protected function publish(EventInterface $event)
-    {
-        $this->apply($event);
-        EventStore::enqueue($event);
     }
 
     /**

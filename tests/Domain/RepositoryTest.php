@@ -66,10 +66,12 @@ class RepositoryTest extends Base
     public function testFind()
     {
         $this->coverRestore();
-        expect(RepositoryStub::find($this->identifier))->equals($this->subject);
+
+        $method = $this->getMethod(new RepositoryStub, 'find');
+        expect($method->invoke(null, $this->identifier))->equals($this->subject);
     }
 
-    public function testGetEntity()
+    public function testGet()
     {
         $value = 'magic';
 
@@ -80,7 +82,7 @@ class RepositoryTest extends Base
             ->once()
             ->andReturn($value);
 
-        expect(RepositoryStub::getEntity($this->identifier))->equals($value);
+        expect(RepositoryStub::get($this->identifier))->equals($value);
     }
 
     /**
@@ -124,6 +126,33 @@ class RepositoryTest extends Base
 
         $this->subject->shouldReceive('handle')
             ->with($command)
+            ->once();
+
+        expect_not(RepositoryStub::handle($command));
+    }
+
+
+    public function testHandlePushesNewEvent()
+    {
+        $command = $this->makeCommand(true);
+        $event = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Event');
+
+        $this->subject->shouldReceive('getSequence')
+            ->withNoArgs()
+            ->once()
+            ->andReturn(30);
+
+        $this->subject->shouldReceive('handle')
+            ->with($command)
+            ->once()
+            ->andReturn($event);
+
+        $this->subject->shouldReceive('apply')
+            ->with($event)
+            ->once();
+
+        EventStore::shouldReceive('enqueue')
+            ->with($event)
             ->once();
 
         expect_not(RepositoryStub::handle($command));

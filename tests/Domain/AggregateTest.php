@@ -1,19 +1,13 @@
 <?php namespace C4tech\Test\RayEmitter\Domain;
 
-use C4tech\RayEmitter\Facades\EventStore;
 use C4tech\Support\Test\Base;
 use Codeception\Verify;
 use Illuminate\Support\Facades\Config;
 use Mockery;
+use Mockery\MockInterface;
 
 class AggregateTest extends Base
 {
-    public function tearDown()
-    {
-        parent::tearDown();
-        EventStore::clearResolvedInstances();
-    }
-
     /**
      * @expectedException C4tech\RayEmitter\Exceptions\EventHandlerMissing
      */
@@ -149,9 +143,6 @@ class AggregateTest extends Base
             ->never()
             ->with($command);
 
-        $subject->shouldReceive('publish')
-            ->never();
-
         $handle = $this->getMethod($subject, 'handle');
         expect_not($handle->invoke($subject, $command));
     }
@@ -160,7 +151,7 @@ class AggregateTest extends Base
     {
         $command = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Command');
 
-        $subject = Mockery::mock('C4tech\Test\RayEmitter\Domain\AggregateStub[createMethodName,publish]')
+        $subject = Mockery::mock('C4tech\Test\RayEmitter\Domain\AggregateStub[createMethodName]')
             ->shouldAllowMockingProtectedMethods();
 
         $subject->shouldReceive('createMethodName')
@@ -168,12 +159,9 @@ class AggregateTest extends Base
             ->once()
             ->andReturn('handleTrue');
 
-        $subject->shouldReceive('publish')
-            ->with(Mockery::type('C4tech\RayEmitter\Contracts\Domain\Event'))
-            ->once();
-
         $handle = $this->getMethod($subject, 'handle');
-        expect_not($handle->invoke($subject, $command));
+        $event = $handle->invoke($subject, $command);
+        expect($event instanceof MockInterface)->equals(true);
     }
 
     public function testHydrateLoops()
@@ -202,25 +190,6 @@ class AggregateTest extends Base
         expect_not($subject->hydrate($collection));
 
         expect($subject->getSequence())->greaterThan($original_sequence);
-    }
-
-    public function testPublishApplies()
-    {
-        $event = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Event');
-
-        $subject = Mockery::mock('C4tech\Test\RayEmitter\Domain\AggregateStub[apply]')
-            ->shouldAllowMockingProtectedMethods();
-
-        $subject->shouldReceive('apply')
-            ->with($event)
-            ->once();
-
-        EventStore::shouldReceive('enqueue')
-            ->with($event)
-            ->once();
-
-        $publish = $this->getMethod($subject, 'publish');
-        expect_not($publish->invoke($subject, $event));
     }
 
     public function testGetterMethod()

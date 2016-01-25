@@ -5,6 +5,16 @@ use C4tech\RayEmitter\Contracts\Event\Collection as EventCollection;
 interface Aggregate
 {
     /**
+     * Apply
+     *
+     * Central method to distribute events to an internal handler which alters
+     * the Aggregate Root's state.
+     * @param  EventInterface $event   An event that has occurred.
+     * @return void
+     */
+    public function apply(Event $event);
+
+    /**
      * Get Entity
      *
      * Return the read-only root Entity of the Aggregate.
@@ -32,8 +42,8 @@ interface Aggregate
      * Handle
      *
      * Central method to distribute command to an internal handler.
-     * @param  EventInterface $event An event that has occurred.
-     * @return void
+     * @param  CommandInterface    $command A command to execute.
+     * @return EventInterface|void $event   An event that has occurred.
      */
     public function handle(Command $command);
 
