@@ -1,9 +1,6 @@
 <?php namespace C4tech\RayEmitter\Domain;
 
-use C4tech\RayEmitter\Contracts\Domain\AggregateRoot as AggregateRootInterface;
-use C4tech\RayEmitter\Exceptions\UnknownProperty;
-
-trait AggregateRoot // extends AggregateRootInterface
+trait AggregateRoot // extends C4tech\RayEmitter\Contracts\Domain\AggregateRoot
 {
     /**
      * @inheritDoc

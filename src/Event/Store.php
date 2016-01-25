@@ -24,6 +24,9 @@ class Store extends Model implements StoreInterface
         'payload'
     ];
 
+    /**
+     * @inheritDoc
+     */
     public function enqueue(EventInterface $event)
     {
         static::$queue[] = [
@@ -35,6 +38,9 @@ class Store extends Model implements StoreInterface
         EventBus::fire($event);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getFor($identifier)
     {
         $events = new Collection;
@@ -47,6 +53,13 @@ class Store extends Model implements StoreInterface
         return $events;
     }
 
+    /**
+     * Restore Event
+     *
+     * Unserialize saved record back into an Event.
+     * @param  static         $record Event Store model record
+     * @return EventInterface
+     */
     protected function restoreEvent($record)
     {
         $class = $record->event;
@@ -54,6 +67,12 @@ class Store extends Model implements StoreInterface
         return $class::unserialize($record);
     }
 
+    /**
+     * Save Queue
+     *
+     * Persist all queued Events into Event Store.
+     * @return void
+     */
     public function saveQueue()
     {
         foreach (static::$queue as $record) {
@@ -65,6 +84,14 @@ class Store extends Model implements StoreInterface
         static::$queue = [];
     }
 
+    /**
+     * Scope: For Entity
+     *
+     * Query scope for Entity identifier.
+     * @param  Query  $query      Query Builder
+     * @param  string $identifier Entity identifier
+     * @return Query
+     */
     public function scopeForEntity($query, $identifier)
     {
         return $query->where('identifier', '=', $identifier);
