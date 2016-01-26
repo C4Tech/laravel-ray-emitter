@@ -50,6 +50,8 @@ abstract class Repository implements RepositoryInterface
             $aggregate->apply($event);
             EventStore::enqueue($event);
         }
+
+        return $aggregate->getId();
     }
 
     /**

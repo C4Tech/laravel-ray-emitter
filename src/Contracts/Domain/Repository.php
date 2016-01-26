@@ -16,7 +16,7 @@ interface Repository
      *
      * Point of entry for Commands to allow fetching of Aggregate state.
      * @param  Command $command Command to be handled.
-     * @return void
+     * @return string           Entity identifier.
      */
     public static function handle(Command $command);
 }

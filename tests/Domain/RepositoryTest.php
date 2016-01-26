@@ -128,7 +128,12 @@ class RepositoryTest extends Base
             ->with($command)
             ->once();
 
-        expect_not(RepositoryStub::handle($command));
+        $this->subject->shouldReceive('getId')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($this->identifier);
+
+        expect(RepositoryStub::handle($command))->equals($this->identifier);
     }
 
 
@@ -151,10 +156,15 @@ class RepositoryTest extends Base
             ->with($event)
             ->once();
 
+        $this->subject->shouldReceive('getId')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($this->identifier);
+
         EventStore::shouldReceive('enqueue')
             ->with($event)
             ->once();
 
-        expect_not(RepositoryStub::handle($command));
+        expect(RepositoryStub::handle($command))->equals($this->identifier);
     }
 }
