@@ -16,7 +16,7 @@ class RepositoryTest extends Base
     {
         $this->subject = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Aggregate')
             ->makePartial();
-        RepositoryStub::$mock =& $this->subject;
+        RepositoryStub::$mock = &$this->subject;
     }
 
     public function tearDown()
