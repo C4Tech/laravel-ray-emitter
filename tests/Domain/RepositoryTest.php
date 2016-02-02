@@ -16,13 +16,14 @@ class RepositoryTest extends Base
     {
         $this->subject = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Aggregate')
             ->makePartial();
-        RepositoryStub::$mock =& $this->subject;
+        RepositoryStub::$mock = &$this->subject;
     }
 
     public function tearDown()
     {
         parent::tearDown();
         EventStore::clearResolvedInstances();
+        $this->setPropertyValue(new RepositoryStub, 'aggregates', [], true);
     }
 
     protected function coverRestore()
@@ -39,7 +40,7 @@ class RepositoryTest extends Base
             ->once();
     }
 
-    protected function makeCommand($get_id = false)
+    protected function makeCommand()
     {
         $command = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Command')
             ->makePartial();
@@ -48,17 +49,11 @@ class RepositoryTest extends Base
             ->withNoArgs()
             ->andReturn($this->sequence);
 
-        if ($get_id) {
-            $command->shouldReceive('getAggregateId')
-                ->withNoArgs()
-                ->andReturn($this->identifier);
+        $command->shouldReceive('getAggregateId')
+            ->withNoArgs()
+            ->andReturn($this->identifier);
 
-            $this->coverRestore();
-        } else {
-            $command->shouldReceive('getAggregateId')
-                ->withNoArgs()
-                ->andReturnNull();
-        }
+        $this->coverRestore();
 
         return $command;
     }
@@ -105,7 +100,7 @@ class RepositoryTest extends Base
      */
     public function testHandleCatchesPostdatedCommands()
     {
-        $command = $this->makeCommand(true);
+        $command = $this->makeCommand();
 
         $this->subject->shouldReceive('getSequence')
             ->withNoArgs()
@@ -117,7 +112,8 @@ class RepositoryTest extends Base
 
     public function testHandlePassesToAggregate()
     {
-        $command = $this->makeCommand(true);
+        $command = $this->makeCommand();
+        $identity = rand();
 
         $this->subject->shouldReceive('getSequence')
             ->withNoArgs()
@@ -131,15 +127,15 @@ class RepositoryTest extends Base
         $this->subject->shouldReceive('getId')
             ->withNoArgs()
             ->once()
-            ->andReturn($this->identifier);
+            ->andReturn($identity);
 
-        expect(RepositoryStub::handle($command))->equals($this->identifier);
+        expect(RepositoryStub::handle($command))->equals($identity);
     }
 
 
     public function testHandlePushesNewEvent()
     {
-        $command = $this->makeCommand(true);
+        $command = $this->makeCommand();
         $event = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Event');
 
         $this->subject->shouldReceive('getSequence')
