@@ -90,7 +90,7 @@ abstract class Event implements EventInterface
     /**
      * @inheritDoc
      */
-    public static function unserialize(stdClass $record)
+    public static function unserialize($record)
     {
         $payload = json_decode($record->payload, true);
         $data = [];

@@ -35,5 +35,5 @@ interface Event
      * @param  stdClass $record Stored Event record
      * @return static
      */
-    public static function unserialize(stdClass $record);
+    public static function unserialize($record);
 }
