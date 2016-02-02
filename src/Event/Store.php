@@ -3,7 +3,6 @@
 use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 use C4tech\RayEmitter\Contracts\Event\Store as StoreInterface;
 use Illuminate\Support\Facades\Event as EventBus;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 
 class Store extends Model implements StoreInterface
