@@ -58,7 +58,7 @@ abstract class Repository implements RepositoryInterface
             EventStore::enqueue($event);
         }
 
-        $identifier = $aggregate->getId();
+        $identifier = $event->getId();
 
         // Cache the aggregate in memory if it is not already.
         if ($identifier && !isset(self::$aggregates[$identifier])) {
