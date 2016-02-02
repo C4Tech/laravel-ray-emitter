@@ -113,7 +113,6 @@ class RepositoryTest extends Base
     public function testHandlePassesToAggregate()
     {
         $command = $this->makeCommand();
-        $identity = rand();
 
         $this->subject->shouldReceive('getSequence')
             ->withNoArgs()
@@ -124,19 +123,20 @@ class RepositoryTest extends Base
             ->with($command)
             ->once();
 
-        $this->subject->shouldReceive('getId')
-            ->withNoArgs()
-            ->once()
-            ->andReturn($identity);
 
-        expect(RepositoryStub::handle($command))->equals($identity);
+        expect_not(RepositoryStub::handle($command));
     }
 
 
     public function testHandlePushesNewEvent()
     {
         $command = $this->makeCommand();
+        $identity = rand();
         $event = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Event');
+        $event->shouldReceive('getId')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($identity);
 
         $this->subject->shouldReceive('getSequence')
             ->withNoArgs()
@@ -152,15 +152,10 @@ class RepositoryTest extends Base
             ->with($event)
             ->once();
 
-        $this->subject->shouldReceive('getId')
-            ->withNoArgs()
-            ->once()
-            ->andReturn($this->identifier);
-
         EventStore::shouldReceive('enqueue')
             ->with($event)
             ->once();
 
-        expect(RepositoryStub::handle($command))->equals($this->identifier);
+        expect(RepositoryStub::handle($command))->equals($identity);
     }
 }

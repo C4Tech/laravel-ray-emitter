@@ -3,6 +3,7 @@
 use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 use C4tech\RayEmitter\Contracts\Event\Store as StoreInterface;
 use Illuminate\Support\Facades\Event as EventBus;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 
 class Store extends Model implements StoreInterface
@@ -29,13 +30,15 @@ class Store extends Model implements StoreInterface
      */
     public function enqueue(EventInterface $event)
     {
+        $class = get_class($event);
         static::$queue[] = [
-            'event'      => get_class($event),
+            'event'      => $class,
             'identifier' => $event->getId(),
-            'payload'    => $event->serialize()
+            'payload'    => $event->serialize(),
+            'raw'        => $event
         ];
 
-        EventBus::fire($event);
+        EventBus::fire('queue:' . $class, [$event]);
     }
 
     /**
@@ -51,6 +54,16 @@ class Store extends Model implements StoreInterface
         }
 
         return $events;
+    }
+
+    public function replayAll()
+    {
+        $records = $this->all();
+
+        $records->each(function ($record) {
+            $event = $this->restoreEvent($record);
+            EventBus::fire('replay:' . $record->event, [$event]);
+        });
     }
 
     /**
@@ -76,9 +89,14 @@ class Store extends Model implements StoreInterface
     public function saveQueue()
     {
         foreach (static::$queue as $record) {
+            $event = $record['raw'];
+            unset($record['raw']);
+
             $record['sequence'] = $this->newQuery()->forEntity($record['identifier'])
                 ->count();
             static::create($record);
+
+            EventBus::fire('save:' . $record['event'], [$event]);
         }
 
         static::$queue = [];
