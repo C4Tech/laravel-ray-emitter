@@ -37,16 +37,20 @@ abstract class Repository implements RepositoryInterface
         if ($expected < $current) {
             throw new OutdatedSequence(
                 sprintf(
-                    'The Aggregate %s has newer data than expected.',
-                    get_class($aggregate)
+                    'The Aggregate %s has newer data than expected (%s v %s).',
+                    get_class($aggregate),
+                    $expected,
+                    $current
                 ),
                 409
             );
         } elseif ($expected > $current) {
             throw new SequenceMismatch(
                 sprintf(
-                    'The Aggregate %s is expected to have more data than it does',
-                    get_class($aggregate)
+                    'The Aggregate %s is expected to have more data than it does (%s v %s).',
+                    get_class($aggregate),
+                    $expected,
+                    $current
                 ),
                 422
             );
