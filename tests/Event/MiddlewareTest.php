@@ -61,7 +61,7 @@ class MiddlewareTest extends Base
             ->withNoArgs()
             ->once();
 
-        EventStore::shouldReceive('saveQueue')
+        EventStore::shouldReceive('publishQueue')
             ->withNoArgs()
             ->once();
 

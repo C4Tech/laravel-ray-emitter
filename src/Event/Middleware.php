@@ -20,7 +20,7 @@ class Middleware
 
         try {
             $response = $next($request);
-            EventStore::saveQueue();
+            EventStore::publishQueue();
         } catch (Exception $e) {
             DB::rollBack();
             throw $e;
