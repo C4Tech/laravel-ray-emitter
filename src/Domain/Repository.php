@@ -9,12 +9,6 @@ use C4tech\RayEmitter\Exceptions\SequenceMismatch;
 abstract class Repository implements RepositoryInterface
 {
     /**
-     * Aggregate Cache
-     * @var array
-     */
-    protected static $aggregates = [];
-
-    /**
      * @inheritDoc
      */
     public static function get($identifier)
@@ -65,12 +59,6 @@ abstract class Repository implements RepositoryInterface
             $identifier = $event->getId();
         }
 
-
-        // Cache the aggregate in memory if it is not already.
-        if (!empty($identifier) && !isset(self::$aggregates[$identifier])) {
-            self::$aggregates[$identifier] = $aggregate;
-        }
-
         return $identifier;
     }
 
@@ -97,15 +85,8 @@ abstract class Repository implements RepositoryInterface
         $aggregate = static::create();
 
         if ($identifier) {
-            // Cache hydrated aggregate
-            if (!isset(self::$aggregates[$identifier])) {
-                $events = EventStore::getFor($identifier);
-                $aggregate->hydrate($events);
-
-                self::$aggregates[$identifier] = $aggregate;
-            }
-
-            $aggregate = self::$aggregates[$identifier];
+            $events = EventStore::getFor($identifier);
+            $aggregate->hydrate($events);
         }
 
         return $aggregate;

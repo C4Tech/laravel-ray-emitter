@@ -23,7 +23,6 @@ class RepositoryTest extends Base
     {
         parent::tearDown();
         EventStore::clearResolvedInstances();
-        $this->setPropertyValue(new RepositoryStub, 'aggregates', [], true);
     }
 
     protected function coverRestore()
