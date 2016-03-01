@@ -76,7 +76,10 @@ abstract class Repository implements RepositoryInterface
      * Generate a new Aggregate with no history.
      * @return Aggregate
      */
-    abstract protected static function create();
+    protected static function create()
+    {
+        throw new Exception('The ' . static::class . '::create method must be defined');
+    }
 
     /**
      * Find
