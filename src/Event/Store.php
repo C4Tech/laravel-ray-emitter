@@ -27,22 +27,6 @@ class Store extends Model implements StoreInterface
     /**
      * @inheritDoc
      */
-    public function enqueue(EventInterface $event)
-    {
-        $class = get_class($event);
-        static::$queue[] = [
-            'event'      => $class,
-            'identifier' => $event->getId(),
-            'payload'    => $event->serialize(),
-            'raw'        => $event
-        ];
-
-        EventBus::fire('queue:' . $class, [$event]);
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function getFor($identifier)
     {
         $events = new Collection;
@@ -79,23 +63,40 @@ class Store extends Model implements StoreInterface
         return $class::unserialize($record);
     }
 
+
+    /**
+     * @inheritDoc
+     */
+    public function saveEvent(EventInterface $event)
+    {
+        $class = get_class($event);
+        $record = [
+            'event'      => $class,
+            'identifier' => $event->getId(),
+            'payload'    => $event->serialize(),
+            'sequence'   => $this->newQuery()
+                                ->forEntity($event->getId())
+                                ->count()
+        ];
+        static::create($record);
+
+        self::$queue[] = [
+            'event' => $class,
+            'payload' => [$event]
+        ];
+        EventBus::fire('save:' . $class, [$event]);
+    }
+
     /**
      * Save Queue
      *
      * Persist all queued Events into Event Store.
      * @return void
      */
-    public function saveQueue()
+    public function publishQueue()
     {
         foreach (static::$queue as $record) {
-            $event = $record['raw'];
-            unset($record['raw']);
-
-            $record['sequence'] = $this->newQuery()->forEntity($record['identifier'])
-                ->count();
-            static::create($record);
-
-            EventBus::fire('save:' . $record['event'], [$event]);
+            EventBus::fire('publish:' . $record['event'], $record['payload']);
         }
 
         static::$queue = [];

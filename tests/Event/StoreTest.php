@@ -16,37 +16,6 @@ class StoreTest extends Model
         EventBus::clearResolvedInstances();
     }
 
-    public function testEnqueue()
-    {
-        $event = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Event[getId,serialize]');
-        $identity = 13;
-        $payload = 'test-payload';
-
-        $event->shouldReceive('getId')
-            ->withNoArgs()
-            ->once()
-            ->andReturn($identity);
-
-        $event->shouldReceive('serialize')
-            ->withNoArgs()
-            ->once()
-            ->andReturn($payload);
-
-        EventBus::shouldReceive('fire')
-            ->with('queue:' . get_class($event), [$event])
-            ->once();
-
-        $store = new EventStore;
-        expect_not($store->enqueue($event));
-        $queue = $this->getPropertyValue($store, 'queue');
-        expect($queue[0])->equals([
-            'event' => get_class($event),
-            'identifier' => $identity,
-            'payload' => $payload,
-            'raw' => $event
-        ]);
-    }
-
     public function testGetFor()
     {
         $record = 'saved-record';
@@ -117,39 +86,73 @@ class StoreTest extends Model
         expect($method->invoke($subject, $record))->equals($record);
     }
 
-    public function testSaveQueue()
+    public function testSaveEvent()
     {
         $store = Mockery::mock(EventStore::class)
             ->makePartial();
-        $raw_event = Mockery::mock('stdClass');
-        $event_name = 'testEvent';
-        $event = [
-            'identifier' => 13,
-            'event' => $event_name,
-            'raw' => $raw_event
-        ];
+        $event = Mockery::mock('C4tech\RayEmitter\Contracts\Domain\Event[getId,serialize]');
+        $identity = 13;
+        $payload = 'test-payload';
         $sequence = 3;
-        $this->setPropertyValue($store, 'queue', [$event]);
+        $expected_event = [
+            'event' => get_class($event),
+            'identifier' => $identity,
+            'payload' => $payload,
+            'sequence' => $sequence
+        ];
+        $expected_record = [
+            'event' => get_class($event),
+            'payload' => [$event]
+        ];
+
+        $event->shouldReceive('getId')
+            ->withNoArgs()
+            ->twice()
+            ->andReturn($identity);
+
+        $event->shouldReceive('serialize')
+            ->withNoArgs()
+            ->once()
+            ->andReturn($payload);
+
+        EventBus::shouldReceive('fire')
+            ->with('save:' . get_class($event), [$event])
+            ->once();
+
         $store->shouldReceive('newQuery->forEntity->count')
             ->withNoArgs()
-            ->with($event['identifier'])
+            ->with($identity)
             ->withNoArgs()
             ->once()
             ->andReturn($sequence);
 
-        $expected = $event;
-        unset($expected['raw']);
-        $expected['sequence'] = $sequence;
-
         $store->shouldReceive('create')
-            ->with($expected)
+            ->with($expected_event)
             ->once();
+
+        expect_not($store->saveEvent($event));
+        $queue = $this->getPropertyValue($store, 'queue');
+        expect($queue[0])->equals($expected_record);
+    }
+
+    public function testPublishQueue()
+    {
+        $store = Mockery::mock(EventStore::class)
+            ->makePartial();
+        $payload = [Mockery::mock('stdClass')];
+        $event_name = 'testEvent';
+        $event = [
+            'event' => $event_name,
+            'payload' => $payload
+        ];
 
         EventBus::shouldReceive('fire')
-            ->with('save:' . $event_name, [$raw_event])
+            ->with('publish:' . $event_name, $payload)
             ->once();
 
-        expect_not($store->saveQueue());
+        $this->setPropertyValue($store, 'queue', [$event]);
+
+        expect_not($store->publishQueue());
 
         $queue = $this->getPropertyValue($store, 'queue');
         expect($queue)->equals([]);

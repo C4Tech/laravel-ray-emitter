@@ -152,7 +152,7 @@ class RepositoryTest extends Base
             ->with($event)
             ->once();
 
-        EventStore::shouldReceive('enqueue')
+        EventStore::shouldReceive('saveEvent')
             ->with($event)
             ->once();
 

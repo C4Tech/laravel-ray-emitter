@@ -61,7 +61,7 @@ abstract class Repository implements RepositoryInterface
         // Queue event for storage
         if ($event = $aggregate->handle($command)) {
             $aggregate->apply($event);
-            EventStore::enqueue($event);
+            EventStore::saveEvent($event);
             $identifier = $event->getId();
         }
 

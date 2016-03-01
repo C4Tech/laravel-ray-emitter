@@ -5,13 +5,13 @@ use C4tech\RayEmitter\Contracts\Domain\Event as EventInterface;
 interface Store
 {
     /**
-     * Enqueue
+     * Save Event
      *
-     * Add an event into the transaction queue.
+     * Add an event into the Event Store.
      * @param  EventInterface $event The event to add.
      * @return void
      */
-    public function enqueue(EventInterface $event);
+    public function saveEvent(EventInterface $event);
 
     /**
      * Get For
