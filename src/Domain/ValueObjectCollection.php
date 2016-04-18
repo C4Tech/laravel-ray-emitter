@@ -1,9 +1,9 @@
 <?php namespace C4tech\RayEmitter\Domain;
 
-use C4tech\RayEmitter\Contracts\Domain\ValueObject;
+use C4tech\RayEmitter\Contracts\Domain\ValueObject as ValueObjectInterface;
 use Illuminate\Support\Collection;
 
-abstract class ValueObjectCollection extends Collection implements ValueObject
+abstract class ValueObjectCollection extends ValueObject
 {
     /**
      * Collection Class
@@ -13,10 +13,16 @@ abstract class ValueObjectCollection extends Collection implements ValueObject
      */
     protected $collectionClass = '';
 
+    public function __construct(array $values = [])
+    {
+        $this->values = new Collection($values);
+        $this->sort();
+    }
+
     /**
      * @inheritDoc
      */
-    public function equals(ValueObject $other)
+    public function equals(ValueObjectInterface $other)
     {
         if (get_class($other) !== get_class($this)) {
             return false;
@@ -37,7 +43,7 @@ abstract class ValueObjectCollection extends Collection implements ValueObject
      */
     public function getHash()
     {
-        return hash('md5', json_encode($this));
+        return hash('md5', json_encode($this->values));
     }
 
     /**
@@ -45,46 +51,52 @@ abstract class ValueObjectCollection extends Collection implements ValueObject
      */
     public function getValue()
     {
-        return $this->all();
+        return $this->values->all();
     }
 
     /**
      * @inheritDoc
      */
-    public static function jsonSerialize()
+    public function jsonSerialize()
     {
         return [
             'class' => $this->collectionClass,
-            'content' => parent::jsonSerialize()
+            'values' => $this->values->jsonSerialize()
         ];
     }
 
     /**
      * @inheritDoc
      */
-    public static function jsonUnserialize($data)
+    public static function jsonUnserialize($json)
     {
+        $data = json_decode($json, true);
         $class = $data['class'];
 
         $values = array_map(
             function ($value) use ($class) {
-                return $class::jsonUnserialize($value);
+                return new $class($value);
             },
-            $data['content']
+            $data['values']
         );
 
         return new static($values);
+    }
+
+    public function push(ValueObject $value)
+    {
+        $this->values->push($value);
     }
 
     /**
      * Sort By Value
      *
      * Sort the array by the VO's value.
-     * @return static
+     * @return void
      */
-    public function sortByValue()
+    private function sort()
     {
-        return $this->sortBy(function ($item) {
+        $this->values = $this->values->sortBy(function ($item) {
             return $item->getValue();
         });
     }
